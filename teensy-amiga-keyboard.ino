@@ -133,7 +133,7 @@ byte readBits() {
   return -1;
 }
 
-byte handShake() {
+void handShake() {
   pinMode(KB_DATA, OUTPUT);
   digitalWrite(KB_DATA, LOW);
   delayMicroseconds(HANDSHAKE_PULSE_LENGTH);
