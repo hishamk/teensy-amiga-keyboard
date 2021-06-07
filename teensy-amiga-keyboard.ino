@@ -32,7 +32,6 @@
    Note that not only is the data line active low, so is the clock line.
 
    I have not included joystick support since it's not something I'm going to use.
-
 */
 
 #define KB_CLK PIN_F6 // Clock PIN_F6 = 17
