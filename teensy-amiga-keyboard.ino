@@ -21,6 +21,8 @@
    Allows modern computers to use Amiga keyboards as regular USB keyboards.
 
    The following sources for an Arduino Leonardo version were consulted during the development of this code:
+   https://github.com/jklof/amigakb
+   https://github.com/tkoecker/amigakb
    https://forum.arduino.cc/t/amiga-500-1000-2000-keyboard-interface/136052/81
    https://forum.arduino.cc/t/amiga-500-1000-2000-keyboard-interface/136052/96
    https://github.com/BrainSlugs83/Amiga500-Keyboard/blob/main/AmigaKeyboard.ino
@@ -120,11 +122,11 @@ byte readBits() {
     bitCursor++;
   } else if (bitCursor == 7 && clockPulledToLow()) {
     isUp = getData();
-    if (isUp) {
+//    if (isUp) {
 //      Serial.println("Key UP");
-    } else {
+//    } else {
 //      Serial.println("Key DOWN");
-    }
+//    }
     handShakeRequired = true;
     bitCursor = 0;
     return dataBits;
