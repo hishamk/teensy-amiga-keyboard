@@ -8,7 +8,7 @@ Tested with the following Amiga keyboards:
 
 I have not yet tested it with an Amiga 2000 keyboard, though there is no reason why it shouldn't work as it shares the same connector pinout as the 3000.
 
-I've used a Teensy 2.0, but any Teensy with an ATmega32U4 or similar MCU with native USB should work.
+I've used a Teensy 2.0, but any Teensy with an ATmega32U4 or similar MCU with native USB should work. To program it, you can use Teensyduino.
 I'd suggest using a DIN 5 to PS/2 adapter to connect the keyboard to the Teensy. Cut off the PS/2 connector, check continuity between the exposed wires and the female DIN 5 end to figure out which wire is which, then connect as follows:
 
 ## Keyboard -> Teensy
