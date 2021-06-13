@@ -79,12 +79,27 @@ static const unsigned int ukKeyLUT[104] = {
   KEY_RIGHT_ALT, KEY_LEFT_ALT, KEY_RIGHT_GUI, KEY_LEFT_GUI
 };
 
+typedef struct {
+  byte keyCode;
+  byte attrs; //isUp, lShift, rShift, lAlt, rAlt, lGUI, rGUI, ctrl
+} KeyStruct;
+
+#define IS_UP(attrs) ((attrs & (1<<0))>>0)
+#define IS_LSHIFT_DOWN(attrs) ((attrs & (1<<1))>>1)
+#define IS_RSHIFT_DOWN(attrs) ((attrs & (1<<2))>>2)
+#define IS_LALT_DOWN(attrs) ((attrs & (1<<3))>>3)
+#define IS_RALT_DOWN(attrs) ((attrs & (1<<4))>>4)
+#define IS_LGUI_DOWN(attrs) ((attrs & (1<<5))>>5)
+#define IS_RGUI_DOWN(attrs) ((attrs & (1<<6))>>6)
+#define IS_CTRL_DOWN(attrs) ((attrs & (1<<7))>>7)
+
 class AmigaKB
 {
   public:
     AmigaKB(int clockPin, int dataPin);
+    KeyStruct readKey();
     byte readBits();
-    bool isUp();
+
   private:
     int getClock();
     int getData();
@@ -115,12 +130,23 @@ int AmigaKB::getData() {
   return digitalRead(_dataPin) ? 0 : 1; // active low -> 1=off (0), 0=on (1).
 }
 
+KeyStruct AmigaKB::readKey() {
+  byte k = readBits();
+
+  KeyStruct ks;
+
+  ks.keyCode = k;
+  ks.attrs |= _isUp << 0;
+  
+  return ks;
+}
+
 byte AmigaKB::readBits() {
   static const byte bitOrder[] = {6, 5, 4, 3, 2, 1, 0};
 
   if (_state == STATE_HANDSHAKE_REQUIRED) {
     _dataBits = 0b00000000;
-    handShake(); // hand shake should happen within 143us of the last clock transmission.
+    handShake(); // hand shake should happen within 143us of the eighth bit's clock pulse.
   }
 
   clockUpdate();
@@ -130,21 +156,17 @@ byte AmigaKB::readBits() {
     _bitCursor++;
   } else if (_bitCursor == 7 && (_state == STATE_CLOCK_LOW)) {
     _isUp = getData();
-    //    if (isUp) {
-    //      Serial.println("Key UP");
-    //    } else {
-    //      Serial.println("Key DOWN");
-    //    }
+    //        if (_isUp) {
+    //          Serial.println("Key UP");
+    //        } else {
+    //          Serial.println("Key DOWN");
+    //        }
     _state = STATE_HANDSHAKE_REQUIRED;
     _bitCursor = 0;
     return _dataBits;
   }
 
-  return -1;
-}
-
-bool AmigaKB::isUp() {
-  return _isUp;
+  return 0xFF;
 }
 
 void AmigaKB::handShake() {
@@ -153,6 +175,7 @@ void AmigaKB::handShake() {
   delayMicroseconds(HANDSHAKE_PULSE_LENGTH);
   digitalWrite(KB_DATA, HIGH);
   pinMode(KB_DATA, INPUT);
+
   _state = STATE_HANDSHAKED;
 }
 
@@ -189,25 +212,27 @@ int selectedKeymap = 0;
 
 void setup() {
   //  Serial.begin(9600);
+  //  Serial.println("Hello");
   keyLUT = usKeyLUT;
 }
 
 void loop() {
   static unsigned int hostKey;
+  static KeyStruct keyStruct;
 
-  keyCode = amigaKB.readBits();
+  keyStruct = amigaKB.readKey();
 
-  if (keyCode > -1) {
-    //      for (int i = 7; i >= 0; i--) {
-    //        Serial.print((char)('0' + ((keyCode >> i) & 1)));
-    //      }
-    //      Serial.println();
-    //      Serial.println(keyCode, BIN);
-    //      Serial.println(keyCode, HEX);
-    //      Serial.println();
-    hostKey = keyLUT[keyCode];
+  if (keyStruct.keyCode != 0xFF) {
+    //    for (int i = 7; i >= 0; i--) {
+    //      Serial.print((char)('0' + ((keyCode >> i) & 1)));
+    //    }
+    //    Serial.println();
+    //    Serial.println(keyCode, BIN);
+    //    Serial.println(keyStruct.keyCode, HEX);
+    //    Serial.println();
+    hostKey = keyLUT[keyStruct.keyCode];
 
-    if (!amigaKB.isUp()) {
+    if (!IS_UP(keyStruct.attrs)) {
       if (hostKey == KEY_CAPS_LOCK) {
         Keyboard.press(hostKey);
         // For macOS, CAPS LOCK press needs to linger a bit longer to register.
